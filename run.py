@@ -74,7 +74,7 @@ def get_cal_events(num):
     events = service.events().list(calendarId=os.getenv('GOOGLE_SUBJECT'),timeMin=now,maxResults=num,orderBy='startTime',singleEvents=True).execute()
     print(events)
 
-def display_test(uptimes, down):
+def display_test(uptimes, down, backend_events):
     try:
         print("init and clear")
         epd = epd7in5_V2.EPD()
@@ -102,6 +102,14 @@ def display_test(uptimes, down):
             draw.text((160, 0), 'Down Monitors', font = display_font, fill = 0)
             draw.line((150, 80, epd.width, 80), fill = 0, width = 3)
             draw.text((160, 50), ", ".join(down), font = display_font_sm, fill = 0)
+        # backend events
+        draw.text((160, 90), 'Backend', font = display_font, fill = 0)
+        draw.line((150, 200, epd.width, 200), fill = 0, width = 3)
+        x = 160
+        y = 210
+        for event in backend_events:
+            draw.text((x, y), event['title'] + " - " + event['culprit'], font = display_font_sm, fill = 0)
+            y += 20
         print("displaying")
         epd.display(epd.getbuffer(image))
         print("/displaying")
@@ -116,7 +124,9 @@ def main():
     #while True:
     uptimes = get_service_ratios()
     down = get_down_monitors()
-    display_test(uptimes, down)
+    # frontend_events = get_sentry_events("frontend")
+    backend_events = get_sentry_events("backend")
+    display_test(uptimes, down, backend_events)
     #time.sleep(180) # 3 mins
     #     print(get_sentry_events("frontend"))
     #     print(get_sentry_events("backend"))
