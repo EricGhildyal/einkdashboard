@@ -74,7 +74,7 @@ def get_cal_events(num):
     events = service.events().list(calendarId=os.getenv('GOOGLE_SUBJECT'),timeMin=now,maxResults=num,orderBy='startTime',singleEvents=True).execute()
     print(events)
 
-def display_test(uptimes):
+def display_test(uptimes, down):
     try:
         print("init and clear")
         epd = epd7in5_V2.EPD()
@@ -86,6 +86,7 @@ def display_test(uptimes):
         number_font = ImageFont.truetype('KellySlab-Regular.ttf', 24)
         image = Image.new('1', (epd.width, epd.height), 255)  # 255: clear the frame
         draw = ImageDraw.Draw(image)
+        # uptimes
         draw.text((5, 0), 'Uptime', font = display_font, fill = 0)
         x = 5
         y = 65
@@ -96,6 +97,11 @@ def display_test(uptimes):
             y += 26
         draw.line((0, 60, 150, 60), fill = 0, width = 3)
         draw.line((150, 0, 150, epd.height), fill = 0, width = 3)
+        # down monitors, if none down, just don't show this section
+        if len(down) > 0:
+            draw.text((5, 0), 'Down Monitors', font = display_font, fill = 0)
+            draw.line((60, 180, epd.width, 180), fill = 0, width = 3)
+            draw.text((180, 5), down.join(","), font = display_font_sm, fill = 0)
         print("displaying")
         epd.display(epd.getbuffer(image))
         print("/displaying")
@@ -107,21 +113,14 @@ def display_test(uptimes):
         exit()
 
 def main():
-    uptimes = get_service_ratios()
-    display_test(uptimes)
-    # while True:
-    #     print("---------------- Down Monitors --------------------")
-    #     print(get_down_monitors())
-    #     print("---------------- 30-day Statistics --------------------")
-    #     print(get_service_ratios())
-    #     print("----------------- Frontend Sentry ---------------------")
+    while True:
+        uptimes = get_service_ratios()
+        down = get_down_monitors()
+        display_test(uptimes, down)
+        time.sleep(180) # 3 mins
     #     print(get_sentry_events("frontend"))
-    #     print("----------------- Backend Sentry ---------------------")
     #     print(get_sentry_events("backend"))
-    #     # print("---------------- Calendar --------------------")
-    #     # # print(get_cal_events(5))
-    #     # print("------------------------------------------")
-    #     time.sleep(180) # sleep 3 mins
+        # # print(get_cal_events(5))
 
 if __name__ == "__main__":
     load_dotenv()
