@@ -55,7 +55,7 @@ def get_sentry_events(project):
                        headers = {"Authorization": f"Bearer {os.getenv('SENTRY_TOKEN')}"}
                       )
     if res.status_code == 200:
-        events = res.json()[:5] # only grab first 5
+        events = res.json()[:3] # only grab first 3
         for event in events:
             out.append({
                 "title": event['title'],
@@ -83,6 +83,7 @@ def display_test(uptimes, down, backend_events):
         print("/init and clear")
         display_font = ImageFont.truetype('Righteous-Regular.ttf', 40)
         display_font_sm = ImageFont.truetype('Righteous-Regular.ttf', 20)
+        display_font_xs = ImageFont.truetype('Righteous-Regular.ttf', 14)
         number_font = ImageFont.truetype('KellySlab-Regular.ttf', 24)
         image = Image.new('1', (epd.width, epd.height), 255)  # 255: clear the frame
         draw = ImageDraw.Draw(image)
@@ -102,14 +103,20 @@ def display_test(uptimes, down, backend_events):
             draw.text((160, 0), 'Down Monitors', font = display_font, fill = 0)
             draw.line((150, 80, epd.width, 80), fill = 0, width = 3)
             draw.text((160, 50), ", ".join(down), font = display_font_sm, fill = 0)
+            x = 160
+            y = 210
+        else:
+            x = 160
+            y = 0
         # backend events
-        draw.text((160, 90), 'Backend', font = display_font, fill = 0)
-        draw.line((150, 200, epd.width, 200), fill = 0, width = 3)
-        x = 160
-        y = 210
+        draw.text((x, y), 'Backend', font = display_font, fill = 0)
+        draw.line((x-10, y+50, epd.width, y+50), fill = 0, width = 3)
+        y = y + 60
         for event in backend_events:
-            draw.text((x, y), event['title'] + " - " + event['culprit'], font = display_font_sm, fill = 0)
+            draw.text((x, y), f"({event['count']}) {event['title']}", font = display_font_xs, fill = 0)
             y += 20
+            draw.text((x+8, y), event['culprit'], font = display_font_xs, fill = 0)
+            y += 25
         print("displaying")
         epd.display(epd.getbuffer(image))
         print("/displaying")
