@@ -107,9 +107,7 @@ def display_test():
         print("/drawing line3")
         print("displaying")
         epd.display(epd.getbuffer(image))
-        print("/disaplying")
-        print("sleep!")
-        epd.sleep()
+        print("/displaying")
     except IOError as err:
         print(f"Error: {err}")
     except KeyboardInterrupt:    
