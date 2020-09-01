@@ -74,80 +74,73 @@ def get_cal_events(num):
     events = service.events().list(calendarId=os.getenv('GOOGLE_SUBJECT'),timeMin=now,maxResults=num,orderBy='startTime',singleEvents=True).execute()
     print(events)
 
-def display_test(uptimes, down, backend_events, frontend_events):
+def display(epd, uptimes, down, backend_events, frontend_events):
     try:
-        print("init and clear")
-        epd = epd7in5_V2.EPD()
-        epd.init()
-        epd.Clear()
-        print("/init and clear")
-        display_font = ImageFont.truetype('Righteous-Regular.ttf', 40)
+        print("Displaying...")
+        display_font = ImageFont.truetype('Righteous-Regular.ttf', 38)
         display_font_sm = ImageFont.truetype('Righteous-Regular.ttf', 20)
-        display_font_xs = ImageFont.truetype('Righteous-Regular.ttf', 14)
-        number_font = ImageFont.truetype('KellySlab-Regular.ttf', 24)
+        display_font_xs = ImageFont.truetype('Righteous-Regular.ttf', 15)
+        number_font = ImageFont.truetype('KellySlab-Regular.ttf', 25)
         image = Image.new('1', (epd.width, epd.height), 255)  # 255: clear the frame
         draw = ImageDraw.Draw(image)
         # uptimes
         draw.text((5, 0), 'Uptime', font = display_font, fill = 0)
-        x = 5
-        y = 65
+        x = 10
+        y = 50
         for serv, ratio in uptimes.items():
             draw.text((x, y), serv, font = display_font_sm, fill = 0)
             y += 20
-            draw.text((x+5, y), str(ratio) + "%", font = number_font, fill = 0)
+            draw.text((x+8, y), str(ratio) + "%", font = number_font, fill = 0)
             y += 26
-        draw.line((0, 60, 150, 60), fill = 0, width = 3)
+        draw.line((0, 50, 150, 50), fill = 0, width = 3)
         draw.line((150, 0, 150, epd.height), fill = 0, width = 3)
         # down monitors, if none down, just don't show this section
         if len(down) > 0:
-            draw.text((160, 0), 'Down Monitors', font = display_font, fill = 0)
+            draw.text((160, 0), '!! Down Monitors !!', font = display_font, fill = 0)
             draw.line((150, 80, epd.width, 80), fill = 0, width = 3)
             draw.text((160, 50), ", ".join(down), font = display_font_sm, fill = 0)
             x = 160
-            y = 210
+            y = 80
         else:
             x = 160
             y = 0
         # backend events
         draw.text((x, y), 'Backend', font = display_font, fill = 0)
-        draw.line((x-10, y+65, epd.width, y+65), fill = 0, width = 3)
-        y = y + 60
+        draw.line((x-10, y+50, epd.width, y+50), fill = 0, width = 3)
+        y += 60
         for event in backend_events:
             draw.text((x, y), f"({event['count']}) {event['title']}", font = display_font_xs, fill = 0)
+            y += 18
+            draw.text((x+12, y), event['culprit'], font = display_font_xs, fill = 0)
             y += 20
-            draw.text((x+8, y), event['culprit'], font = display_font_xs, fill = 0)
-            y += 25
         # frontend events
-        y += 20
         draw.text((x, y), 'Frontend', font = display_font, fill = 0)
-        draw.line((x-10, y+65, epd.width, y+65), fill = 0, width = 3)
-        y = y + 60
+        draw.line((x-10, y+50, epd.width, y+50), fill = 0, width = 3)
+        y += 60
         for event in frontend_events:
             draw.text((x, y), f"({event['count']}) {event['title']}", font = display_font_xs, fill = 0)
+            y += 18
+            draw.text((x+12, y), event['culprit'], font = display_font_xs, fill = 0)
             y += 20
-            draw.text((x+8, y), event['culprit'], font = display_font_xs, fill = 0)
-            y += 25
-        print("displaying")
         epd.display(epd.getbuffer(image))
-        print("/displaying")
     except IOError as err:
         print(f"Error: {err}")
-    except KeyboardInterrupt:    
+    except KeyboardInterrupt:
         print("^C")
         epd7in5_V2.epdconfig.module_exit()
         exit()
 
 def main():
-    #while True:
-    uptimes = get_service_ratios()
-    down = get_down_monitors()
-    frontend_events = get_sentry_events("frontend")
-    backend_events = get_sentry_events("backend")
-    display_test(uptimes, down, backend_events, frontend_events)
-    #time.sleep(180) # 3 mins
-    #     print(get_sentry_events("frontend"))
-    #     print(get_sentry_events("backend"))
-        # # print(get_cal_events(5))
+    epd = epd7in5_V2.EPD()
+    epd.init()
+    epd.Clear()
+    while True:
+        uptimes = get_service_ratios()
+        down = get_down_monitors()
+        frontend_events = get_sentry_events("frontend")
+        backend_events = get_sentry_events("backend")
+        display(epd, uptimes, down, backend_events, frontend_events)
+        time.sleep(180)
 
 if __name__ == "__main__":
     load_dotenv()
