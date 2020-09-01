@@ -8,10 +8,9 @@ from dotenv import load_dotenv
 import requests
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-# from waveshare_epd import epd7in5_V2
-# import time
-# from PIL import Image, ImageDraw, ImageFont
-# import traceback
+from waveshare_epd import epd7in5_V2
+from PIL import Image, ImageDraw, ImageFont
+import traceback
 
 UPTIMEROBOT_API_URL = "https://api.uptimerobot.com/v2"
 SENTRY_API_URL = "https://sentry.io/api/0"
@@ -45,7 +44,7 @@ def get_service_ratios():
                 ratios[serv_name] = [float(monitor['custom_uptime_ratio'])]
         for ratio in ratios:
             if isinstance(ratios[ratio], list):
-                ratios[ratio] = round(sum(ratios[ratio]) / len(ratios[ratio]), 4)
+                ratios[ratio] = round(sum(ratios[ratio]) / len(ratios[ratio]), 2)
         return ratios
     print(f"Error getting service ratios: {res.json()}")
     return None
@@ -84,17 +83,17 @@ def display_test(uptimes):
         print("/init and clear")
         display_font = ImageFont.truetype('Righteous-Regular.ttf', 40)
         display_font_sm = ImageFont.truetype('Righteous-Regular.ttf', 20)
-        number_font = ImageFont.truetype('KellySlab-Regular.ttf', 35)
+        number_font = ImageFont.truetype('KellySlab-Regular.ttf', 24)
         image = Image.new('1', (epd.width, epd.height), 255)  # 255: clear the frame
         draw = ImageDraw.Draw(image)
-        draw.text((10, 0), 'Uptime', font = display_font, fill = 0)
-        x = 10
+        draw.text((5, 0), 'Uptime', font = display_font, fill = 0)
+        x = 5
         y = 65
         for serv, ratio in uptimes.items():
             draw.text((x, y), serv, font = display_font_sm, fill = 0)
-            y += 25
-            draw.text((x, y), ratio, font = number_font, fill = 0)
-            y += 30
+            y += 20
+            draw.text((x+5, y), str(ratio) + "%", font = number_font, fill = 0)
+            y += 26
         draw.line((0, 60, 150, 60), fill = 0, width = 3)
         draw.line((150, 0, 150, epd.height), fill = 0, width = 3)
         print("displaying")
