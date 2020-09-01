@@ -55,7 +55,7 @@ def get_sentry_events(project):
                        headers = {"Authorization": f"Bearer {os.getenv('SENTRY_TOKEN')}"}
                       )
     if res.status_code == 200:
-        events = res.json()[:3] # only grab first 3
+        events = res.json()[:4] # only grab first 4
         for event in events:
             out.append({
                 "title": event['title'],
@@ -74,7 +74,7 @@ def get_cal_events(num):
     events = service.events().list(calendarId=os.getenv('GOOGLE_SUBJECT'),timeMin=now,maxResults=num,orderBy='startTime',singleEvents=True).execute()
     print(events)
 
-def display_test(uptimes, down, backend_events):
+def display_test(uptimes, down, backend_events, frontend_events):
     try:
         print("init and clear")
         epd = epd7in5_V2.EPD()
@@ -110,9 +110,19 @@ def display_test(uptimes, down, backend_events):
             y = 0
         # backend events
         draw.text((x, y), 'Backend', font = display_font, fill = 0)
-        draw.line((x-10, y+50, epd.width, y+50), fill = 0, width = 3)
+        draw.line((x-10, y+65, epd.width, y+65), fill = 0, width = 3)
         y = y + 60
         for event in backend_events:
+            draw.text((x, y), f"({event['count']}) {event['title']}", font = display_font_xs, fill = 0)
+            y += 20
+            draw.text((x+8, y), event['culprit'], font = display_font_xs, fill = 0)
+            y += 25
+        # frontend events
+        y += 20
+        draw.text((x, y), 'Frontend', font = display_font, fill = 0)
+        draw.line((x-10, y+65, epd.width, y+65), fill = 0, width = 3)
+        y = y + 60
+        for event in frontend_events:
             draw.text((x, y), f"({event['count']}) {event['title']}", font = display_font_xs, fill = 0)
             y += 20
             draw.text((x+8, y), event['culprit'], font = display_font_xs, fill = 0)
@@ -131,9 +141,9 @@ def main():
     #while True:
     uptimes = get_service_ratios()
     down = get_down_monitors()
-    # frontend_events = get_sentry_events("frontend")
+    frontend_events = get_sentry_events("frontend")
     backend_events = get_sentry_events("backend")
-    display_test(uptimes, down, backend_events)
+    display_test(uptimes, down, backend_events, frontend_events)
     #time.sleep(180) # 3 mins
     #     print(get_sentry_events("frontend"))
     #     print(get_sentry_events("backend"))
