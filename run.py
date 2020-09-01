@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 import requests
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from waveshare_epd import epd7in5_V2
-import time
-from PIL import Image, ImageDraw, ImageFont
-import traceback
+# from waveshare_epd import epd7in5_V2
+# import time
+# from PIL import Image, ImageDraw, ImageFont
+# import traceback
 
 UPTIMEROBOT_API_URL = "https://api.uptimerobot.com/v2"
 SENTRY_API_URL = "https://sentry.io/api/0"
@@ -75,7 +75,7 @@ def get_cal_events(num):
     events = service.events().list(calendarId=os.getenv('GOOGLE_SUBJECT'),timeMin=now,maxResults=num,orderBy='startTime',singleEvents=True).execute()
     print(events)
 
-def display_test():
+def display_test(uptimes):
     try:
         print("init and clear")
         epd = epd7in5_V2.EPD()
@@ -84,14 +84,17 @@ def display_test():
         print("/init and clear")
         display_font = ImageFont.truetype('Righteous-Regular.ttf', 40)
         display_font_sm = ImageFont.truetype('Righteous-Regular.ttf', 20)
-        number_font = ImageFont.truetype('Righteous-Regular.ttf', 28)
+        number_font = ImageFont.truetype('KellySlab-Regular.ttf', 35)
         image = Image.new('1', (epd.width, epd.height), 255)  # 255: clear the frame
         draw = ImageDraw.Draw(image)
         draw.text((10, 0), 'Uptime', font = display_font, fill = 0)
-        draw.text((10, 65), 'Arrowroot', font = display_font_sm, fill = 0)
-       	draw.text((10, 90), '99.988%', font = display_font_sm, fill = 0)
-        draw.text((10, 120), 'Waterlily', font = display_font_sm, fill = 0)
-        draw.text((10, 145), '99.673%', font = display_font_sm, fill = 0)
+        x = 10
+        y = 65
+        for serv, ratio in uptimes.items():
+            draw.text((x, y), serv, font = display_font_sm, fill = 0)
+            y += 25
+            draw.text((x, y), ratio, font = number_font, fill = 0)
+            y += 30
         draw.line((0, 60, 150, 60), fill = 0, width = 3)
         draw.line((150, 0, 150, epd.height), fill = 0, width = 3)
         print("displaying")
@@ -105,7 +108,8 @@ def display_test():
         exit()
 
 def main():
-    display_test()
+    uptimes = get_service_ratios()
+    display_test(uptimes)
     # while True:
     #     print("---------------- Down Monitors --------------------")
     #     print(get_down_monitors())
