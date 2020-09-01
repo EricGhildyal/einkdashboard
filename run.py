@@ -99,9 +99,9 @@ def display_test(uptimes, down):
         draw.line((150, 0, 150, epd.height), fill = 0, width = 3)
         # down monitors, if none down, just don't show this section
         if len(down) > 0:
-            draw.text((5, 0), 'Down Monitors', font = display_font, fill = 0)
-            draw.line((60, 180, epd.width, 180), fill = 0, width = 3)
-            draw.text((180, 5), down.join(","), font = display_font_sm, fill = 0)
+            draw.text((160, 0), 'Down Monitors', font = display_font, fill = 0)
+            draw.line((150, 80, epd.width, 80), fill = 0, width = 3)
+            draw.text((160, 50), ", ".join(down), font = display_font_sm, fill = 0)
         print("displaying")
         epd.display(epd.getbuffer(image))
         print("/displaying")
@@ -113,11 +113,11 @@ def display_test(uptimes, down):
         exit()
 
 def main():
-    while True:
-        uptimes = get_service_ratios()
-        down = get_down_monitors()
-        display_test(uptimes, down)
-        time.sleep(180) # 3 mins
+    #while True:
+    uptimes = get_service_ratios()
+    down = get_down_monitors()
+    display_test(uptimes, down)
+    #time.sleep(180) # 3 mins
     #     print(get_sentry_events("frontend"))
     #     print(get_sentry_events("backend"))
         # # print(get_cal_events(5))
