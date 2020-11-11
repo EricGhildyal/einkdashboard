@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
-import sys
 import os
-import pickle
 import time
 from datetime import datetime, timedelta
 
@@ -23,7 +21,6 @@ SENTRY_API_URL = "https://sentry.io/api/0"
 GOOGLE_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 def get_down_monitors():
-    down = []
     res = requests.post(f"{UPTIMEROBOT_API_URL}/getMonitors",
                         data = f"api_key={os.getenv('UPTIMEROBOT_API_KEY')}&format=json&statuses=8-9",
                         headers = {
@@ -34,16 +31,26 @@ def get_down_monitors():
     logger.error(f"Error getting down monitors: {res.json()}")
     return None
 
-def get_service_ratios():
-    ratios = {}
-    res = requests.post(f"{UPTIMEROBOT_API_URL}/getMonitors",
-                        data = f"api_key={os.getenv('UPTIMEROBOT_API_KEY')}&format=json&custom_uptime_ratios=30",
+def get_monitors(params):
+    return requests.post(f"{UPTIMEROBOT_API_URL}/getMonitors",
+                        data = f"api_key={os.getenv('UPTIMEROBOT_API_KEY')}&format=json{params}",
                         headers = {
                             "Content-Type": "application/x-www-form-urlencoded"
                         })
+
+def get_service_ratios():
+    ratios = {}
+    res = get_monitors(f"&custom_uptime_ratios=30&offset={0}")
     if res.status_code == 200 and res.json()['stat'] == "ok":
-        for monitor in res.json()['monitors']: # we want an avg over all the services on different clusters
-            logger.info(monitor['friendly_name'].split(" ")[0])
+        res = res.json()
+        monitors = res['monitors']
+        total = res['pagination']['total']
+        # try pagination to make sure we have the full list
+        while total > len(monitors):
+            new_res = get_monitors(f"&custom_uptime_ratios=30&offset={len(monitors)}")
+            if new_res.status_code == 200 and new_res.json()['stat'] == "ok":
+                monitors.extend(new_res.json()['monitors'])
+        for monitor in monitors: # we want an avg over all the services on different clusters
             serv_name = monitor['friendly_name'].split(" ")[0]
             if serv_name in ratios:
                 ratios[serv_name].append(float(monitor['custom_uptime_ratio']))
@@ -139,7 +146,7 @@ def display(epd, uptimes, down, backend_events, frontend_events):
         logger.error(f"Error: {err}")
     except KeyboardInterrupt:
         logger.error("^C")
-        epd7in5_V2.epdconfig.module_exit()
+        # epd7in5_V2.epdconfig.module_exit()
         exit()
 
 def main():
