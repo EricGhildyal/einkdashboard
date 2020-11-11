@@ -10,7 +10,6 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from waveshare_epd import epd7in5_V2
 from PIL import Image, ImageDraw, ImageFont
-import traceback
 
 UPTIMEROBOT_API_URL = "https://api.uptimerobot.com/v2"
 SENTRY_API_URL = "https://sentry.io/api/0"
@@ -134,13 +133,23 @@ def main():
     epd = epd7in5_V2.EPD()
     epd.init()
     epd.Clear()
+    old_data = -1
+    new_data = 1
     while True:
+        print("Fetching new data...")
         uptimes = get_service_ratios()
         down = get_down_monitors()
         frontend_events = get_sentry_events("frontend")
         backend_events = get_sentry_events("backend")
-        display(epd, uptimes, down, backend_events, frontend_events)
-        time.sleep(180)
+        new_data = hash(str(uptimes) + str(down) + str(frontend_events) + str(backend_events))
+        if new_data != old_data:
+            print("displaying new data")
+            display(epd, uptimes, down, backend_events, frontend_events)
+        else:
+            print("data hasn't changed")
+        old_data = new_data
+        print("sleeping...")
+        time.sleep(30)
 
 if __name__ == "__main__":
     load_dotenv()
