@@ -102,11 +102,12 @@ def display(epd, uptimes, down, backend_events, frontend_events):
         draw.text((5, 0), 'Uptime', font = display_font, fill = 0)
         x = 10
         y = 50
-        for serv, ratio in uptimes.items():
-            draw.text((x, y), serv, font = display_font_sm, fill = 0)
-            y += 20
-            draw.text((x+8, y), str(ratio) + "%", font = number_font, fill = 0)
-            y += 26
+        if uptimes:
+            for serv, ratio in uptimes.items():
+                draw.text((x, y), serv, font = display_font_sm, fill = 0)
+                y += 20
+                draw.text((x+8, y), str(ratio) + "%", font = number_font, fill = 0)
+                y += 26
         draw.line((0, 50, 150, 50), fill = 0, width = 3)
         draw.line((150, 0, 150, epd.height), fill = 0, width = 3)
         logger.info("Drawing Down monitors")
