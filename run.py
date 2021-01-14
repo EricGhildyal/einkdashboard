@@ -158,20 +158,24 @@ def main():
     old_data = -1
     new_data = 1
     while True:
-        logger.info("Fetching new data...")
-        uptimes = get_service_ratios()
-        down = get_down_monitors()
-        frontend_events = get_sentry_events("frontend")
-        backend_events = get_sentry_events("backend")
-        new_data = hash(str(uptimes) + str(down) + str(frontend_events) + str(backend_events))
-        if new_data != old_data:
-            logger.info("displaying new data")
-            display(epd, uptimes, down, backend_events, frontend_events)
-        else:
-            logger.info("data hasn't changed")
-        old_data = new_data
-        logger.info("sleeping...")
-        time.sleep(30)
+        try:
+            logger.info("Fetching new data...")
+            uptimes = get_service_ratios()
+            down = get_down_monitors()
+            frontend_events = get_sentry_events("frontend")
+            backend_events = get_sentry_events("backend")
+            new_data = hash(str(uptimes) + str(down) + str(frontend_events) + str(backend_events))
+            if new_data != old_data:
+                logger.info("displaying new data")
+                display(epd, uptimes, down, backend_events, frontend_events)
+            else:
+                logger.info("data hasn't changed")
+            old_data = new_data
+            logger.info("sleeping...")
+            time.sleep(30)
+        except Exception:
+            logger.info("Caught error, waiting them re-trying...")
+            time.sleep(60)
 
 if __name__ == "__main__":
     load_dotenv()
